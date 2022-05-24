@@ -1,0 +1,101 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.1.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:6.1.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+    # See https://rmoff.net/2018/08/02/kafka-listeners-explained/ for details
+      - 9092:9092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 100
+
+  db:
+    image: mariadb:10.7.3
+    container_name: db
+    restart: unless-stopped
+    ports:
+      - 3306:3306
+    environment:
+      - MARIADB_DATABASE=SAMPLE
+      - MYSQL_ROOT_PASSWORD=s3cr3t-p@sssw0rd-r00t
+  
+  # jaeger:
+  #   image: jaegertracing/all-in-one:1.22.0
+  #   container_name: jaeger
+  #   ports:
+  #     - "16686:16686"
+  #     - "14268"
+  #     - "14250"
+
+  # mssql:
+  #   image: "mcr.microsoft.com/mssql/server"
+  #   container_name: mssql
+  #   ports:
+  #     - "1433:1433"
+  #   environment:
+  #     SA_PASSWORD: "Sjw2pBufpvGfh6*V"
+  #     ACCEPT_EULA: "Y"
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.21.0
+    container_name: otel-collector
+    command: ["--config=/etc/otel-collector-config.yml"]
+    volumes:
+      - ./otel-collector-config.yml:/etc/otel-collector-config.yml
+    ports:
+      - "4317:4317"
+      - "55681:55681"
+      - "9464:9464"
+    depends_on:
+      - tempo
+
+  tempo:
+    image: grafana/tempo:latest
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    container_name: tempo
+    volumes:
+      - ./local/tempo-local.yaml:/etc/tempo.yaml
+      - ./tempo-data:/tmp/tempo
+    ports:
+      - "14268"  # jaeger ingest
+      - "3200:3200"   # tempo
+      - "4317"  # otlp grpc
+      - "4318"  # otlp http
+      - "9411"   # zipkin
+
+  prometheus:
+    image: prom/prometheus:latest
+    command: [ "--config.file=/etc/prometheus.yaml" ]
+    container_name: prometheus
+    volumes:
+      - ./shared/prometheus.yaml:/etc/prometheus.yaml
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:8.1.6
+    volumes:
+      - ./shared/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    ports:
+      - "3000:3000"

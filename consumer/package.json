@@ -1,0 +1,37 @@
+{
+  "name": "consumer",
+  "version": "0.1.0",
+  "description": "A simple kafka consumer app.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IvanovOleg/nodejs-otel-sample.git"
+  },
+  "keywords": [
+    "opentelemetry"
+  ],
+  "author": "Oleg Ivanov",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/IvanovOleg/nodejs-otel-sample/issues"
+  },
+  "homepage": "https://github.com/IvanovOleg/nodejs-otel-sample#readme",
+  "dependencies": {
+    "@opentelemetry/api": "^0.18.1",
+    "@opentelemetry/exporter-collector": "^0.18.2",
+    "@opentelemetry/instrumentation": "^0.18.2",
+    "@opentelemetry/instrumentation-mysql": "^0.28.0",
+    "@opentelemetry/metrics": "^0.18.2",
+    "@opentelemetry/node": "^0.18.2",
+    "@opentelemetry/tracing": "^0.18.2",
+    "kafkajs": "^1.15.0",
+    "mssql": "^6.3.1",
+    "mysql": "^2.18.1",
+    "opentelemetry-instrumentation-kafkajs": "^0.3.0",
+    "opentelemetry-instrumentation-mssql": "^0.3.1",
+    "winston": "^3.3.3"
+  }
+}

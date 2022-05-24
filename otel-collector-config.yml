@@ -1,0 +1,32 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+exporters:
+  otlp:
+    endpoint: tempo:4317
+    insecure: true
+  logging:
+      loglevel: debug
+  prometheus:
+    endpoint: "0.0.0.0:9464"
+
+processors:
+  batch:
+    timeout: 10s
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [logging, otlp]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging,prometheus]
+    logs:
+      receivers: [otlp]
+      processors: []
+      exporters: [logging]
